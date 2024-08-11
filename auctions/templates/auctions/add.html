@@ -1,0 +1,48 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <form action="{% url 'auctions:add' %}" method="post">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <input type="text" class="form-control" name="title" placeholder="Title" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" name="description" placeholder="Description" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <input type="text" id="price" class="form-control" name="startingBid" placeholder="Starting Bid" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <input type="text" class="form-control" name="imageUrl" placeholder="Image URL" autocomplete="off">
+        </div>
+
+        <div class="form-group">
+            <select class="form-control" name="category">
+                {% for each in category_list %}
+                    <option value="{{ each }}">{{ each }}</option>
+                {% endfor %}
+            </select>
+
+        </div>
+
+        <input type="submit" class="btn btn-secondary" value="Create">
+
+
+    </form>
+
+    <script>
+        document.addEventListener("submit", event => {
+            let floatValue = parseFloat(document.querySelector("#price").value);
+            if (!isNaN(floatValue) && isFinite(floatValue)) {
+                return;
+            }
+            alert("Price must be a number.");
+            event.preventDefault()
+
+        })
+    </script>
+{% endblock %}
