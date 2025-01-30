@@ -1,123 +1,142 @@
-{% extends "auctions/layout.html" %}
+{% extends "auctions/layout.html" %} {% block body %}
 
-{% block body %}
+<div class="card mb-3" style="max-width: 100%; border: none">
+    {% if message %}
+    <div class="alert alert-primary" role="alert">{{ message }}</div>
 
-    <div class="card mb-3" style="max-width: 100%; border: none;">
+    {% endif %} {% if user == listing.price.user and not listing.isOpen %}
+    <div class="alert alert-primary" role="alert">
+        You have won this auction.
+    </div>
 
-        {% if message %}
-            <div class="alert alert-primary" role="alert">
-                {{ message }}
+    {% endif %} {% if user.is_authenticated %} {% if isInWatchlist %}
+    <form
+        method="post"
+        action="{% url 'auctions:remove_watchlist' listing.id %}"
+    >
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+            Remove from Watchlist
+        </button>
+    </form>
+
+    {% else %}
+    <form method="post" action="{% url 'auctions:add_watchlist' listing.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Add to Watchlist</button>
+    </form>
+
+    {% endif %} {% endif %}
+
+    <div style="max-width: 50%; border: 1px solid blue" class="my-3">
+        <img
+            alt="{{ listing.title }}"
+            class="card-img-top"
+            src="{{ listing.photoUrl }}"
+        />
+    </div>
+
+    <div class="card-body">
+        <h2 class="card-title">{{ listing.title }}</h2>
+        <p class="card-text">{{ listing.description }}</p>
+        <p class="card-text">${{ listing.price.value }}</p>
+
+        {% if user.is_authenticated and listing.isOpen %}
+        <form
+            id="placeBid"
+            method="post"
+            action="{% url 'auctions:place_bid' listing.id %}"
+        >
+            {% csrf_token %}
+
+            <div class="form-group">
+                <input
+                    type="number"
+                    min="0"
+                    name="bid"
+                    class="form-control"
+                    id="inputBid"
+                />
+                <input
+                    type="hidden"
+                    value="{{ listing.price.value }}"
+                    id="currentListPrice"
+                />
+                <input
+                    type="submit"
+                    value="Place Bid"
+                    class="btn btn-secondary"
+                />
             </div>
+        </form>
 
-        {% endif %}
+        {% if request.user == listing.owner %}
+        <form action="{% url 'auctions:close_auction' listing.id %}">
+            {% csrf_token %}
+            <input type="submit" class="btn btn-danger" value="Close Auction" />
+        </form>
+        {% endif %} {% endif %}
 
-        {% if user == listing.price.user and not listing.isOpen %}
-            <div class="alert alert-primary" role="alert">
-                You have won this auction.
-            </div>
-
-        {% endif %}
-
-        {% if user.is_authenticated %}
-
-            {% if isInWatchlist %}
-                <form method="post" action="{% url 'auctions:remove_watchlist' listing.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Remove from Watchlist</button>
-                </form>
-
-            {% else %}
-                <form method="post" action="{% url 'auctions:add_watchlist' listing.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-primary">Add to Watchlist</button>
-                </form>
-
-            {% endif %}
-        {% endif %}
-
-        <div style="max-width: 50%; border: 1px solid blue;" class="my-3">
-            <img alt="{{ listing.title }}" class="card-img-top" src="{{ listing.photoUrl }}">
-        </div>
-
-        <div class="card-body">
-            <h2 class="card-title">{{ listing.title }}</h2>
-            <p class="card-text">{{ listing.description }}</p>
-            <p class="card-text">${{ listing.price.value }}</p>
-
-            {% if user.is_authenticated and listing.isOpen %}
-                <form id="placeBid" method="post" action="{% url 'auctions:place_bid' listing.id %}">
-                    {% csrf_token %}
-
-                    <div class="form-group">
-
-                        <input type="number" min="0" name="bid" class="form-control" id="inputBid">
-                        <input type="hidden" value="{{ listing.price.value }}" id="currentListPrice">
-                        <input type="submit" value="Place Bid" class="btn btn-secondary">
-                    </div>
-                </form>
-
-                {% if request.user == listing.owner %}
-                    <form action="{% url 'auctions:close_auction' listing.id %}">
-                        {% csrf_token %}
-                        <input type="submit" class="btn btn-danger" value="Close Auction">
-                    </form>
-                {% endif %}
-            {% endif %}
-
-
-
-            <div class="my-3">
-                <h5>Details</h5>
-                <ul>
-                    <li>Listed by: {{ listing.owner }}</li>
-                    <li>Category: {{ listing.category }}</li>
-                </ul>
-                <p class="card-text"><small class="text-muted">Created at {{ listing.created}}</small></p>
-            </div>
-        </div>
-
-        <div class="">
-            <h3>Comment</h3>
-            <br>
-
-            <ul class="list-group">
-                {% for comment in comments %}
-                    <li class="list-group-item">
-                        <p>{{ comment.comment }}</p>
-                        <p>By {{ comment.owner }}</p>
-                        <p>{{ comment.created }}</p>
-                    </li>
-                {% endfor %}
+        <div class="my-3">
+            <h5>Details</h5>
+            <ul>
+                <li>Listed by: {{ listing.owner }}</li>
+                <li>Category: {{ listing.category }}</li>
             </ul>
-
-            {% if user.is_authenticated %}
-                <div>
-                    <form action="{% url 'auctions:comment' listing.id %}" method="post">
-                        {% csrf_token %}
-                        <textarea class="form-control" name="comment" placeholder="Comment"></textarea>
-                        <input type="submit" class="btn btn-primary" value="Comment">
-
-                    </form>
-                </div>
-            {% endif %}
-
+            <p class="card-text">
+                <small class="text-muted"
+                    >Created at {{ listing.created}}</small
+                >
+            </p>
         </div>
     </div>
 
-    <script>
+    <div class="">
+        <h3>Comment</h3>
+        <br />
 
-        document.getElementById("placeBid").onsubmit = event => {
-            let floatBid = parseFloat(document.querySelector("#inputBid").value);
-            let currentListPrice = parseFloat(document.querySelector("#currentListPrice").value);
-            console.log(floatBid, currentListPrice);
+        <ul class="list-group">
+            {% for comment in comments %}
+            <li class="list-group-item">
+                <p>{{ comment.comment }}</p>
+                <p>By {{ comment.owner }}</p>
+                <p>{{ comment.created }}</p>
+            </li>
+            {% endfor %}
+        </ul>
 
-            if (floatBid <= currentListPrice) {
-                alert("You must bid a bigger price than the latest bid!");
-                event.preventDefault();
-            }
+        {% if user.is_authenticated %}
+        <div>
+            <form
+                action="{% url 'auctions:comment' listing.id %}"
+                method="post"
+            >
+                {% csrf_token %}
+                <textarea
+                    class="form-control"
+                    name="comment"
+                    placeholder="Comment"
+                ></textarea>
+                <input type="submit" class="btn btn-primary" value="Comment" />
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.getElementById("placeBid").onsubmit = (event) => {
+        let floatBid = parseFloat(document.querySelector("#inputBid").value);
+        let currentListPrice = parseFloat(
+            document.querySelector("#currentListPrice").value
+        );
+        console.log(floatBid, currentListPrice);
+
+        if (floatBid <= currentListPrice) {
+            alert("You must bid a bigger price than the latest bid!");
+            event.preventDefault();
         }
-
-    </script>
-
+    };
+</script>
 
 {% endblock %}

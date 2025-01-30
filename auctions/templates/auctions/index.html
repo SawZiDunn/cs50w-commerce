@@ -1,36 +1,48 @@
-{% extends "auctions/layout.html" %}
+{% extends "auctions/layout.html" %} {% block body %} {% if not listings %}
+<h2>No Listings Available!</h2>
+{% else %}
+<h2 class="mb-4">Active Listings</h2>
 
-{% block body %}
-    {% if not listings %}
-        <h2>No Listing!</h2>       
-        
-    {% else %}
-        <h2>Active Listings</h2>
-        <br>
+<div class="d-flex flex-wrap justify-content-start gap-5 px-3">
+    {% for listing in listings %}
+    <div class="card shadow-sm" style="width: 300px">
+        <img
+            src="{{ listing.photoUrl|default:'/static/images/placeholder.jpg' }}"
+            class="card-img-top"
+            alt="{{ listing.title }}"
+            style="
+                height: 180px;
+                object-fit: contain;
+                background-color: #f8f9fa;
+            "
+        />
 
-        {% for listing in listings %}
+        <div class="card-body" style="font-size: 14px">
+            <a
+                href="{% url 'auctions:listing' listing.id %}"
+                class="text-decoration-none text-primary"
+            >
+                <h6 class="card-title">{{ listing.title }}</h6>
+            </a>
+            <p class="card-text text-muted">
+                {{ listing.description|truncatechars:80 }}
+            </p>
+            <p class="card-text font-weight-bold">
+                ${{ listing.price.value|floatformat:2 }}
+            </p>
+            <p class="card-text">
+                <small class="text-muted"
+                    >Category: {{ listing.category }}</small
+                >
+            </p>
+            <p class="card-text">
+                <small class="text-muted"
+                    >Created at {{ listing.created }}</small
+                >
+            </p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 
-            <div class="card my-3" style="max-width: 75%;">
-
-                <div class="row g-0">
-                    <div class="col-md-4">
-                        <img src="{{ listing.photoUrl }}" class="card-img" alt="{{ listing.title }}">
-                    </div>
-
-                    <div class="col-md-8">
-                        <div class="card-body">
-
-                            <a href="{% url 'auctions:listing' listing.id %}"><h5 class="card-title">{{ listing.title }}</h5></a>
-                            <p class="card-text">{{ listing.description }}</p>
-                            <p class="card-text">${{ listing.price.value }}</p>
-                            <p class="card-text">Category: {{ listing.category }}</p>
-                            <p class="card-text"><small class="text-muted">Created at {{ listing.created }}</small></p>
-                        </div>
-                    </div>
-              </div>
-            </div>
-
-        {% endfor %}
-    {% endif %}
-
-{% endblock %}
+{% endif %} {% endblock %}
